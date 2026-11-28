@@ -1,0 +1,30 @@
+[
+  { "type": "chime", "t": 0.18, "notes": [72, 76, 79, 84], "step": 0.06, "gain": 0.30, "pan": 0.0 },
+  { "type": "whoosh", "t": 2.15, "dur": 0.55, "up": false, "pan": 0.15, "gain": 0.95 },
+
+  { "type": "whoosh", "t": 6.00, "dur": 0.45, "up": true, "pan": -0.1, "gain": 0.90 },
+  { "type": "pop", "t": 7.00, "f0": 540, "f1": 820, "dur": 0.11, "pan": -0.2, "gain": 1.0 },
+  { "type": "pop", "t": 8.10, "f0": 660, "f1": 1020, "dur": 0.12, "pan": -0.2, "gain": 1.05 },
+  { "type": "typing", "t": 8.95, "dur": 1.68, "count": 22, "pan": 0.15, "gain": 0.65 },
+  { "type": "pop", "t": 10.95, "f0": 360, "f1": 620, "dur": 0.12, "pan": 0.2, "gain": 0.95 },
+  { "type": "chime", "t": 11.25, "notes": [76, 81], "step": 0.07, "gain": 0.22, "pan": 0.1 },
+
+  { "type": "whoosh", "t": 13.05, "dur": 0.42, "up": false, "pan": 0.0, "gain": 0.75 },
+  { "type": "pop", "t": 15.35, "f0": 780, "f1": 460, "dur": 0.10, "pan": 0.1, "gain": 1.0 },
+  { "type": "pop", "t": 16.55, "f0": 620, "f1": 920, "dur": 0.10, "pan": 0.1, "gain": 0.85 },
+  { "type": "chime", "t": 17.45, "notes": [69, 74, 79], "step": 0.04, "gain": 0.25, "pan": 0.12 },
+  { "type": "whoosh", "t": 17.60, "dur": 0.38, "up": true, "pan": 0.15, "gain": 0.80 },
+  { "type": "chime", "t": 20.35, "notes": [72, 76, 84], "step": 0.055, "gain": 0.30, "pan": 0.15 },
+
+  { "type": "whoosh", "t": 22.65, "dur": 0.45, "up": true, "pan": -0.1, "gain": 0.85 },
+  { "type": "chime", "t": 23.60, "notes": [67, 74, 83], "step": 0.035, "gain": 0.34, "pan": 0.0 },
+  { "type": "pop", "t": 23.62, "f0": 480, "f1": 1180, "dur": 0.14, "pan": 0.0, "gain": 1.0 },
+  { "type": "typing", "t": 24.45, "dur": 1.45, "count": 11, "pan": 0.18, "gain": 0.70 },
+  { "type": "pop", "t": 27.38, "f0": 840, "f1": 440, "dur": 0.12, "pan": -0.15, "gain": 0.95 },
+
+  { "type": "whoosh", "t": 28.60, "dur": 0.50, "up": false, "pan": 0.1, "gain": 0.90 },
+  { "type": "pop", "t": 30.25, "f0": 520, "f1": 740, "dur": 0.09, "pan": 0.2, "gain": 0.85 },
+  { "type": "pop", "t": 32.55, "f0": 640, "f1": 880, "dur": 0.09, "pan": 0.2, "gain": 0.80 },
+
+  { "type": "whoosh", "t": 33.65, "dur": 0.50, "up": false, "pan": 0.0, "gain": 0.85 }
+]

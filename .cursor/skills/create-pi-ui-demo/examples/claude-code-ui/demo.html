@@ -1,0 +1,1415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1920, initial-scale=1.0" />
+<title>claude-code-ui — Final Product Launch Demo</title>
+<style>
+  :root {
+    --terracotta: #de7f5d;
+    --terracotta-bright: #f6b290;
+    --terracotta-mid: #eb9876;
+    --mode-purple: #b8a6e8;
+    --bash-pink: #ea8ab8;
+    --git-pink: #f5c2e7;
+    --bright-white: #f4f4f6;
+    --text: #e4e4e8;
+    --muted: #a4a4ae;
+    --thinking: #8c8c96;
+    --dim: #82828c;
+    --border: #4e4e56;
+    --border-subtle: #45454d;
+    --green: #62d67c;
+    --red: #f2797e;
+    --amber: #e8c070;
+    --blue: #7fb8f2;
+    --cyan: #7fd4d8;
+    --user-bg: #343439;
+    --diff-add-bg: #243d2d;
+    --diff-remove-bg: #48262b;
+    --syn-kw: #c89cf0;
+    --syn-fn: #82b4f8;
+    --syn-var: #eb9fa8;
+    --syn-str: #98dc98;
+    --syn-num: #f0a97a;
+    --syn-type: #f0d48a;
+    --syn-op: #88d4dc;
+    --syn-punc: #9a9ea8;
+    --mono: "JetBrainsMono Nerd Font Mono", "JetBrainsMono NFM", Menlo, monospace;
+    --sans: -apple-system, "SF Pro Display", "PingFang SC", "Hiragino Sans GB", sans-serif;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html, body {
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    background: #100f14;
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    color: var(--bright-white);
+  }
+
+  #viewport {
+    position: relative;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    background: radial-gradient(circle at 72% 44%, #1e1924 0%, #141219 48%, #0d0c11 100%);
+  }
+
+  /* Ambient 2.5D Parallax Background Layer */
+  #bg-layer {
+    position: absolute;
+    inset: -120px;
+    pointer-events: none;
+    will-change: transform;
+  }
+
+  .glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.48;
+  }
+
+  #glow-terracotta {
+    width: 960px;
+    height: 960px;
+    left: 860px;
+    top: -140px;
+    background: radial-gradient(circle, rgba(222, 127, 93, 0.44) 0%, rgba(222, 127, 93, 0.11) 45%, transparent 72%);
+  }
+
+  #glow-purple {
+    width: 900px;
+    height: 900px;
+    left: 200px;
+    top: 420px;
+    background: radial-gradient(circle, rgba(184, 166, 232, 0.30) 0%, rgba(184, 166, 232, 0.08) 50%, transparent 72%);
+  }
+
+  #glow-bash {
+    width: 820px;
+    height: 820px;
+    left: 980px;
+    top: 420px;
+    background: radial-gradient(circle, rgba(234, 138, 184, 0.44) 0%, rgba(234, 138, 184, 0.11) 50%, transparent 72%);
+    opacity: 0;
+  }
+
+  .bg-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.022) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+    background-size: 64px 64px;
+    mask-image: radial-gradient(ellipse 75% 75% at 62% 50%, rgba(0, 0, 0, 0.65), transparent 85%);
+  }
+
+  #particles {
+    position: absolute;
+    inset: 0;
+  }
+
+  .star {
+    position: absolute;
+    border-radius: 50%;
+  }
+
+  /* Crisp 2D Camera Stage (zero 3D rotate blur on Retina monospace typography) */
+  #camera-stage {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  #camera-rig {
+    position: absolute;
+    inset: 0;
+    transform-origin: 0 0;
+    will-change: transform;
+  }
+
+  /* Terminal Window */
+  #term-shell {
+    position: absolute;
+    left: 740px;
+    top: 175px;
+    width: 980px;
+    border-radius: 18px;
+    background: rgba(21, 21, 26, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    box-shadow:
+      0 36px 90px rgba(0, 0, 0, 0.72),
+      0 12px 28px rgba(0, 0, 0, 0.50),
+      0 0 0 1px rgba(222, 127, 93, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.11);
+    overflow: hidden;
+    transform-origin: 50% 50%;
+    will-change: transform, width, opacity, box-shadow;
+  }
+
+  .term-titlebar {
+    height: 44px;
+    padding: 0 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(180deg, rgba(42, 42, 49, 0.94) 0%, rgba(30, 30, 36, 0.92) 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  }
+
+  .traffic-lights {
+    display: flex;
+    gap: 9px;
+    align-items: center;
+    width: 72px;
+  }
+
+  .dot-btn {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+  .dot-r { background: #ff5f57; }
+  .dot-y { background: #febc2e; }
+  .dot-g { background: #28c840; }
+
+  .term-title-text {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: rgba(228, 228, 232, 0.68);
+    letter-spacing: 0.2px;
+  }
+
+  .term-title-badge {
+    width: 72px;
+    text-align: right;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: rgba(222, 127, 93, 0.88);
+  }
+
+  #term-body {
+    padding: 16px 20px 18px 20px;
+    font-family: var(--mono);
+    font-size: 16.5px;
+    line-height: 24px;
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0, "calt" 0;
+    color: var(--text);
+    height: 690px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    position: relative;
+  }
+
+  #term-scroll-area {
+    flex: 1 1 auto;
+    overflow: hidden;
+    position: relative;
+  }
+
+  #term-scroll-inner {
+    will-change: transform;
+  }
+
+  #term-bottom-dock {
+    flex: 0 0 auto;
+    padding-top: 6px;
+    background: linear-gradient(180deg, rgba(21, 21, 26, 0) 0%, rgba(21, 21, 26, 0.98) 16%);
+    position: relative;
+    z-index: 3;
+  }
+
+  .t-line {
+    height: 24px;
+    line-height: 24px;
+    white-space: pre;
+    display: block;
+  }
+
+  /* Faithful Pi UserMessageComponent: paddingY = 1 (3-row sharp rectangle), Output padding = 1 col inset */
+  .t-line.user-pad,
+  .t-line.user-row {
+    background: var(--user-bg);
+    margin-left: 1ch;
+    margin-right: 1ch;
+    border-radius: 0;
+  }
+
+  .t-line.diff-add {
+    background: var(--diff-add-bg);
+    margin-left: 1ch;
+    margin-right: 1ch;
+  }
+
+  .t-line.diff-rem {
+    background: var(--diff-remove-bg);
+    margin-left: 1ch;
+    margin-right: 1ch;
+  }
+
+  .t-line.diff-ctx {
+    margin-left: 1ch;
+    margin-right: 1ch;
+  }
+
+  .bold { font-weight: 700; }
+  .italic { font-style: italic; }
+  .dim-text { opacity: 0.78; }
+
+  .c-terra { color: var(--terracotta); }
+  .c-terra-bright { color: var(--terracotta-bright); }
+  .c-terra-mid { color: var(--terracotta-mid); }
+  .c-white { color: var(--bright-white); }
+  .c-text { color: var(--text); }
+  .c-muted { color: var(--muted); }
+  .c-thinking { color: var(--thinking); }
+  .c-dim { color: var(--dim); }
+  .c-border { color: var(--border); }
+  .c-border-subtle { color: var(--border-subtle); }
+  .c-green { color: var(--green); }
+  .c-red { color: var(--red); }
+  .c-amber { color: var(--amber); }
+  .c-purple { color: var(--mode-purple); }
+  .c-blue { color: var(--blue); }
+  .c-pink { color: var(--bash-pink); }
+  .c-git-pink { color: var(--git-pink); }
+  .c-syn-kw { color: var(--syn-kw); }
+  .c-syn-fn { color: var(--syn-fn); }
+  .c-syn-var { color: var(--syn-var); }
+  .c-syn-str { color: var(--syn-str); }
+  .c-syn-num { color: var(--syn-num); }
+  .c-syn-type { color: var(--syn-type); }
+  .c-syn-op { color: var(--syn-op); }
+  .c-syn-punc { color: var(--syn-punc); }
+
+  .cursor-block {
+    display: inline-block;
+    width: 9.5px;
+    height: 18.5px;
+    vertical-align: -3px;
+    background: var(--bright-white);
+    margin-right: 1px;
+  }
+  .cursor-block.bash {
+    background: var(--bash-pink);
+  }
+
+  /* Seamless Vector Clawd */
+  .clawd-svg-badge {
+    width: 144px;
+    height: 92px;
+    display: block;
+    filter: drop-shadow(0 0 18px rgba(222, 127, 93, 0.48));
+    shape-rendering: crispEdges;
+  }
+
+  .clawd-inline-anchor {
+    position: relative;
+    display: inline-block;
+    width: 9ch;
+    height: 24px;
+    vertical-align: top;
+  }
+
+  .clawd-inline-svg {
+    position: absolute;
+    left: 0;
+    top: 1px;
+    width: 9ch;
+    height: 70px;
+    display: block;
+    shape-rendering: crispEdges;
+  }
+
+  /* Resize Handle & Width Indicator (Scene 5) */
+  #resize-handle-ring {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 3px;
+    height: 100%;
+    background: linear-gradient(180deg, transparent, var(--terracotta), transparent);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  #width-pill {
+    position: absolute;
+    bottom: 122px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgba(20, 19, 25, 0.94);
+    border: 1px solid rgba(222, 127, 93, 0.48);
+    font-family: var(--mono);
+    font-size: 13.5px;
+    color: var(--terracotta-bright);
+    opacity: 0;
+    z-index: 10;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  }
+
+  #drag-cursor {
+    position: absolute;
+    width: 36px;
+    height: 36px;
+    opacity: 0;
+    z-index: 40;
+    pointer-events: none;
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.6));
+  }
+
+  #left-scrim {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 680px;
+    height: 1080px;
+    background: linear-gradient(90deg, rgba(13, 12, 17, 0.94) 0%, rgba(13, 12, 17, 0.84) 68%, rgba(13, 12, 17, 0) 100%);
+    pointer-events: none;
+    z-index: 15;
+    opacity: 0;
+  }
+
+  /* Kinetic Typography Sidebar */
+  #caption-box {
+    position: absolute;
+    left: 88px;
+    top: 50%;
+    width: 500px;
+    transform: translateY(-50%);
+    z-index: 20;
+    pointer-events: none;
+  }
+
+  .cap-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--terracotta-bright);
+    letter-spacing: 0.4px;
+    margin-bottom: 18px;
+  }
+
+  .cap-tag-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--terracotta);
+    box-shadow: 0 0 12px var(--terracotta);
+  }
+
+  .cap-en {
+    font-size: 52px;
+    font-weight: 700;
+    line-height: 1.12;
+    letter-spacing: -0.025em;
+    color: var(--bright-white);
+    margin-bottom: 20px;
+  }
+
+  .cap-en .accent { color: var(--terracotta-bright); }
+  .cap-en .accent-pink { color: var(--bash-pink); }
+  .cap-en .accent-purple { color: var(--mode-purple); }
+
+  .cap-zh {
+    font-size: 25px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: rgba(228, 228, 232, 0.78);
+    letter-spacing: 0.01em;
+  }
+
+  /* Keystroke HUD Capsule */
+  #key-hud {
+    position: absolute;
+    z-index: 35;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(248, 248, 252, 0.96) 0%, rgba(226, 226, 236, 0.94) 100%);
+    color: #16151c;
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 700;
+    box-shadow:
+      0 18px 40px rgba(0, 0, 0, 0.55),
+      0 3px 0 rgba(160, 158, 174, 0.9),
+      inset 0 1px 0 rgba(255, 255, 255, 1);
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+
+  #key-hud.pink-key {
+    background: linear-gradient(180deg, #ffaad2 0%, #ea8ab8 100%);
+    color: #1a0d14;
+    box-shadow:
+      0 18px 44px rgba(234, 138, 184, 0.45),
+      0 3px 0 #b85d89,
+      inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  }
+
+  /* Hero Intro Clawd Overlay */
+  #intro-hero {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 25;
+    pointer-events: none;
+  }
+
+  .clawd-badge {
+    width: 210px;
+    height: 210px;
+    border-radius: 44px;
+    background: linear-gradient(145deg, #27242e 0%, #17151c 100%);
+    border: 1.5px solid rgba(222, 127, 93, 0.42);
+    box-shadow:
+      0 32px 90px rgba(0, 0, 0, 0.65),
+      0 0 80px rgba(222, 127, 93, 0.22),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #intro-sub {
+    margin-top: 28px;
+    text-align: center;
+  }
+
+  .intro-pill {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 18px;
+    color: var(--terracotta-bright);
+    padding: 6px 16px;
+    border-radius: 999px;
+    background: rgba(222, 127, 93, 0.14);
+    border: 1px solid rgba(222, 127, 93, 0.34);
+    margin-bottom: 14px;
+  }
+
+  .intro-title {
+    font-size: 62px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--bright-white);
+  }
+
+  .intro-zh {
+    margin-top: 10px;
+    font-size: 24px;
+    color: rgba(228, 228, 232, 0.72);
+  }
+
+  /* Outro Card */
+  #outro-layer {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 30;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .outro-card {
+    display: flex;
+    align-items: center;
+    gap: 54px;
+    padding: 52px 64px;
+    border-radius: 32px;
+    background: rgba(24, 23, 30, 0.88);
+    border: 1px solid rgba(222, 127, 93, 0.28);
+    box-shadow:
+      0 40px 100px rgba(0, 0, 0, 0.65),
+      0 0 100px rgba(222, 127, 93, 0.16),
+      inset 0 1px 0 rgba(255, 255, 255, 0.10);
+  }
+
+  .outro-info h1 {
+    font-size: 58px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .outro-ver {
+    font-family: var(--mono);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--terracotta-bright);
+    padding: 5px 14px;
+    border-radius: 999px;
+    background: rgba(222, 127, 93, 0.16);
+    border: 1px solid rgba(222, 127, 93, 0.36);
+  }
+
+  .outro-sub {
+    margin-top: 10px;
+    font-size: 22px;
+    color: rgba(228, 228, 232, 0.76);
+  }
+
+  .outro-cmd {
+    margin-top: 26px;
+    padding: 14px 22px;
+    border-radius: 12px;
+    background: rgba(14, 13, 18, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    font-family: var(--mono);
+    font-size: 20px;
+    color: var(--bright-white);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .outro-meta {
+    margin-top: 18px;
+    font-family: var(--mono);
+    font-size: 16px;
+    color: var(--muted);
+    display: flex;
+    gap: 18px;
+    align-items: center;
+  }
+
+  #progress-bar {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--terracotta), var(--terracotta-bright), var(--bash-pink));
+    z-index: 50;
+    width: 0%;
+    opacity: 0.7;
+  }
+</style>
+</head>
+<body>
+<div id="viewport">
+  <div id="bg-layer">
+    <div id="glow-terracotta" class="glow"></div>
+    <div id="glow-purple" class="glow"></div>
+    <div id="glow-bash" class="glow"></div>
+    <div class="bg-grid"></div>
+    <div id="particles"></div>
+  </div>
+
+  <div id="camera-stage">
+    <div id="camera-rig">
+      <div id="term-shell">
+        <div class="term-titlebar">
+          <div class="traffic-lights">
+            <span class="dot-btn dot-r"></span>
+            <span class="dot-btn dot-y"></span>
+            <span class="dot-btn dot-g"></span>
+          </div>
+          <div class="term-title-text">pi — ~/pi-theme (claude-code-ui)</div>
+          <div class="term-title-badge" id="term-cols-badge">94×28</div>
+        </div>
+        <div id="term-body">
+          <div id="width-pill">94 cols · two-column</div>
+          <div id="term-scroll-area">
+            <div id="term-scroll-inner"></div>
+          </div>
+          <div id="term-bottom-dock"></div>
+        </div>
+        <div id="resize-handle-ring"></div>
+      </div>
+    </div>
+  </div>
+
+  <svg id="drag-cursor" viewBox="0 0 36 36" fill="none">
+    <path d="M5 18L12 11.5V15.5H24V11.5L31 18L24 24.5V20.5H12V24.5L5 18Z" fill="#ffffff" stroke="#16151c" stroke-width="2.2" stroke-linejoin="round"/>
+  </svg>
+
+  <div id="left-scrim"></div>
+
+  <div id="caption-box">
+    <div class="cap-tag"><span class="cap-tag-dot" id="cap-dot"></span><span id="cap-tag-text"></span></div>
+    <div class="cap-en" id="cap-en"></div>
+    <div class="cap-zh" id="cap-zh"></div>
+  </div>
+
+  <div id="key-hud"></div>
+
+  <div id="intro-hero">
+    <div class="clawd-badge" id="intro-badge">
+      <svg class="clawd-svg-badge" viewBox="0 0 18 10" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path fill="#de7f5d" fill-rule="evenodd" d="M3,0 H15 V4 H17 V6 H15 V8 H14 V10 H13 V8 H12 V10 H11 V8 H7 V10 H6 V8 H5 V10 H4 V8 H3 V6 H1 V4 H3 Z M5,2 H6 V4 H5 Z M12,2 H13 V4 H12 Z"/>
+      </svg>
+    </div>
+    <div id="intro-sub">
+      <div class="intro-pill">pi-theme · claude-code-ui</div>
+      <div class="intro-title">Claude Code 2.x, inside Pi.</div>
+      <div class="intro-zh">为 Pi Coding Agent 打造的 Claude Code 2.x 终端界面</div>
+    </div>
+  </div>
+
+  <div id="outro-layer">
+    <div class="outro-card">
+      <div class="clawd-badge">
+        <svg class="clawd-svg-badge" viewBox="0 0 18 10" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path fill="#de7f5d" fill-rule="evenodd" d="M3,0 H15 V4 H17 V6 H15 V8 H14 V10 H13 V8 H12 V10 H11 V8 H7 V10 H6 V8 H5 V10 H4 V8 H3 V6 H1 V4 H3 Z M5,2 H6 V4 H5 Z M12,2 H13 V4 H12 Z"/>
+        </svg>
+      </div>
+      <div class="outro-info">
+        <h1>claude-code-ui <span class="outro-ver">Pi 1.7.0</span></h1>
+        <div class="outro-sub">Claude Code 2.x 终端布局与深色半透明配色主题</div>
+        <div class="outro-cmd">
+          <span class="c-terra bold">❯</span>
+          <span>pi install "$PWD/extensions/claude-code-ui"</span>
+        </div>
+        <div class="outro-meta">
+          <span>macOS · Linux</span>
+          <span>·</span>
+          <span>24-bit Truecolor</span>
+          <span>·</span>
+          <span class="c-terra-bright">github.com/wangxuyang1221/pi-theme</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="progress-bar"></div>
+</div>
+
+<script>
+(() => {
+  // -------------------------------------------------------------------------
+  // Math & Easing Helpers
+  // -------------------------------------------------------------------------
+  const clamp = (v, lo = 0, hi = 1) => Math.max(lo, Math.min(hi, v));
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const invLerp = (a, b, v) => clamp((v - a) / (b - a));
+  const easeOutExpo = t => (t >= 1 ? 1 : 1 - Math.pow(2, -10 * t));
+  const easeInOutCubic = t => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+  const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+  const easeOutBack = t => {
+    const c1 = 1.45, c3 = c1 + 1;
+    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+  };
+  const smoothstep = (a, b, x) => {
+    const t = invLerp(a, b, x);
+    return t * t * (3 - 2 * t);
+  };
+
+  function keyframeValue(t, keys) {
+    if (t <= keys[0].t) return keys[0].v;
+    for (let i = 0; i < keys.length - 1; i++) {
+      const a = keys[i], b = keys[i + 1];
+      if (t <= b.t) {
+        const u = clamp((t - a.t) / (b.t - a.t));
+        const e = b.ease ? b.ease(u) : easeInOutCubic(u);
+        return lerp(a.v, b.v, e);
+      }
+    }
+    return keys[keys.length - 1].v;
+  }
+
+  // Deterministic Floating Stars
+  const particlesEl = document.getElementById("particles");
+  const stars = [];
+  let seed = 4219;
+  const rand = () => {
+    seed = (seed * 16807) % 2147483647;
+    return (seed - 1) / 2147483646;
+  };
+  for (let i = 0; i < 36; i++) {
+    const el = document.createElement("div");
+    el.className = "star";
+    const size = 2 + rand() * 3.2;
+    el.style.width = size + "px";
+    el.style.height = size + "px";
+    el.style.left = (rand() * 2160) + "px";
+    el.style.top = (rand() * 1320) + "px";
+    el.style.background = rand() > 0.35 ? "rgba(246, 178, 144, 0.7)" : "rgba(184, 166, 232, 0.65)";
+    particlesEl.appendChild(el);
+    stars.push({ el, phase: rand() * Math.PI * 2, speed: 0.6 + rand() * 1.2, baseAlpha: 0.16 + rand() * 0.45 });
+  }
+
+  // -------------------------------------------------------------------------
+  // 100% Pi 1.7.0 + claude-code-ui Faithful Terminal Builders
+  // -------------------------------------------------------------------------
+  const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const span = (cls, text) => `<span class="${cls}">${esc(text)}</span>`;
+  const CLAWD_INLINE_HTML =
+    `<span class="clawd-inline-anchor"><svg class="clawd-inline-svg" viewBox="0 0 18 12" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path fill="#de7f5d" fill-rule="evenodd" d="M3,0 H15 V4 H17 V6 H15 V8 H14 V10 H13 V8 H12 V10 H11 V8 H7 V10 H6 V8 H5 V10 H4 V8 H3 V6 H1 V4 H3 Z M5,2 H6 V4 H5 Z M12,2 H13 V4 H12 Z"/></svg></span>`;
+  const CLAWD_BLANK = "         ";
+  const SPINNER_FRAMES = ["·", "✢", "✳", "✶", "✻", "✽", "✻", "✶", "✳", "✢"];
+
+  function padVis(html, visibleLen, width) {
+    return html + " ".repeat(Math.max(0, width - visibleLen));
+  }
+
+  function centerVis(html, visibleLen, width) {
+    const left = Math.max(0, Math.floor((width - visibleLen) / 2));
+    const right = Math.max(0, width - visibleLen - left);
+    return " ".repeat(left) + html + " ".repeat(right);
+  }
+
+  function renderWelcomeHeader(cols, modelId, thinking, branch) {
+    const boxW = Math.min(cols - 2, 92);
+    const inner = boxW - 2;
+    const titleVis = " Claude Code v1.7.0 ";
+    const titleHtml = ` ${span("c-terra bold", "Claude Code")} ${span("c-dim", "v1.7.0")} `;
+    const topRightLen = Math.max(1, inner - 3 - titleVis.length);
+    const topLine = ` ${span("c-terra", "╭───")}${titleHtml}${span("c-terra", "─".repeat(topRightLen) + "╮")}`;
+    const bottomLine = ` ${span("c-terra", "╰" + "─".repeat(inner) + "╯")}`;
+
+    const welcomeText = "Welcome back!";
+    const welcomeHtml = span("c-white bold", welcomeText);
+    const modelVis = thinking !== "off" ? `${modelId} · ${thinking}` : modelId;
+    const modelHtml = `${span("c-muted", modelId)}${thinking !== "off" ? span("c-dim", ` · ${thinking}`) : ""}`;
+    const dirText = "~/Code/pi-theme";
+
+    if (cols < 78) {
+      const colW = inner - 2;
+      const row = (html, len) =>
+        ` ${span("c-terra", "│")} ${centerVis(html, len, colW)} ${span("c-terra", "│")}`;
+      return [
+        topLine,
+        row(welcomeHtml, welcomeText.length),
+        row(CLAWD_INLINE_HTML, 9),
+        row(CLAWD_BLANK, 9),
+        row(CLAWD_BLANK, 9),
+        row(modelHtml, modelVis.length),
+        row(span("c-dim", dirText), dirText.length),
+        bottomLine,
+        "",
+      ];
+    }
+
+    const leftW = Math.min(34, Math.max(26, Math.floor((inner - 3) * 0.36)));
+    const rightW = inner - leftW - 3;
+
+    const leftRows = [
+      [welcomeHtml, welcomeText.length],
+      ["", 0],
+      [CLAWD_INLINE_HTML, 9],
+      [CLAWD_BLANK, 9],
+      [CLAWD_BLANK, 9],
+      [modelHtml, modelVis.length],
+      [span("c-dim", dirText), dirText.length],
+    ];
+
+    const dividerLen = Math.max(8, rightW - 2);
+    const rightRows = [
+      [span("c-terra bold", "Tips for getting started"), 24],
+      [
+        `${span("c-muted", "Use ")}${span("c-text", "/model")}${span("c-muted", " to switch, ")}${span("c-text", "shift+tab")}${span("c-muted", " for thinking")}`,
+        44,
+      ],
+      [
+        `${span("c-muted", "Press ")}${span("c-text", "ctrl+o")}${span("c-muted", " to expand tools, ")}${span("c-text", "!")}${span("c-muted", " for bash")}`,
+        40,
+      ],
+      [span("c-border-subtle", "─".repeat(dividerLen)), dividerLen],
+      [span("c-terra bold", "Session"), 7],
+      [`${span("c-dim", "cwd ")}${span("c-muted", dirText)}`, 4 + dirText.length],
+      [`${span("c-dim", "git ")}${span("c-git-pink", ` ${branch}`)}`, 6 + branch.length],
+    ];
+
+    const body = leftRows.map(([lHtml, lLen], i) => {
+      const [rHtml, rLen] = rightRows[i];
+      const l = centerVis(lHtml, lLen, leftW);
+      const r = padVis(rHtml, rLen, rightW - 1);
+      return ` ${span("c-terra", "│")} ${l} ${span("c-border-subtle", "│")} ${r}${span("c-terra", "│")}`;
+    });
+
+    return [topLine, ...body, bottomLine, ""];
+  }
+
+  function renderShimmerVerb(text, tick) {
+    const chars = Array.from(text);
+    const period = chars.length + 10;
+    const center = (tick % period) - 3;
+    return chars.map((ch, idx) => {
+      const dist = Math.abs(idx - center);
+      const cls = dist === 0 ? "c-terra-bright" : dist === 1 ? "c-terra-mid" : "c-terra";
+      return span(cls, ch);
+    }).join("");
+  }
+
+  function renderWorkingLine(elapsedSec, tokens, verb, active) {
+    if (!active) return "";
+    const tick = Math.floor((elapsedSec * 1000) / 80);
+    const glyph = SPINNER_FRAMES[tick % SPINNER_FRAMES.length];
+    const shimmer = renderShimmerVerb(verb, tick);
+    const secs = `${Math.floor(elapsedSec)}s`;
+    const tokStr = tokens >= 1000 ? `${(tokens / 1000).toFixed(1)}k` : `${Math.floor(tokens)}`;
+    const detail = `${span("c-dim", "(")}${span("c-muted", "esc")}${span("c-dim", " to interrupt · ")}${span("c-dim", secs)}${span("c-dim", " · ↓ ")}${span("c-dim", `${tokStr} tokens`)}${span("c-dim", ")")}`;
+    return ` ${span("c-terra", glyph)} ${shimmer} ${detail}`;
+  }
+
+  function renderEditorAndFooter(opts) {
+    const {
+      cols, draft, bashMode, thinking, modelId, branch, contextLeft, rate, showCursor, workingHtml,
+    } = opts;
+    const inner = cols - 2;
+    const ruleColor = bashMode ? "c-pink" : "c-border";
+    const rule = ` ${span(ruleColor, "─".repeat(inner))}`;
+
+    const promptGlyph = bashMode
+      ? span("c-pink bold", "❯")
+      : span("c-white bold", "❯");
+
+    let inputContent;
+    if (!draft && !bashMode) {
+      const cur = showCursor ? `<span class="cursor-block"></span>` : "";
+      inputContent = ` ${promptGlyph} ${cur}${span("c-dim", 'Try "refactor retry backoff"')}`;
+    } else if (bashMode) {
+      // Faithful Pi Bash composer: keeps the leading '!' character inside the draft (`❯ !git status -sb`)
+      const cur = showCursor ? `<span class="cursor-block bash"></span>` : "";
+      inputContent = ` ${promptGlyph} ${span("c-text", draft)}${cur}`;
+    } else {
+      const cur = showCursor ? `<span class="cursor-block"></span>` : "";
+      inputContent = ` ${promptGlyph} ${span("c-text", draft)}${cur}`;
+    }
+
+    const compact = inner < 84;
+    let leftHtml, leftLen;
+    if (bashMode) {
+      const base = "! for bash mode";
+      const extra = compact ? "" : " · esc to cancel";
+      leftHtml = ` ${span("c-pink", base)}${extra ? span("c-dim", extra) : ""}`;
+      leftLen = 1 + base.length + extra.length;
+    } else {
+      // Faithful claude-components.ts: non-off thinking mode uses CLAUDE_RGB.modePurple (#b8a6e8)
+      const text = compact
+        ? `⏵⏵ thinking: ${thinking}`
+        : `⏵⏵ thinking: ${thinking} (shift+tab to cycle)`;
+      leftHtml = ` ${span("c-purple", text)}`;
+      leftLen = 1 + text.length;
+    }
+
+    const sep = span("c-dim", " · ");
+    const ctxText = compact ? `${contextLeft}%` : `Context left: ${contextLeft}%`;
+    const rPartsHtml = [
+      span("c-muted", modelId),
+      span("c-git-pink", ` ${branch}`),
+      span("c-dim", ctxText),
+    ];
+    let rightLen = modelId.length + 3 + (2 + branch.length) + 3 + ctxText.length + 1;
+    // Faithful live rate: shown with '≈' only while Working is active, cleared after settlement!
+    if (rate && !compact) {
+      rPartsHtml.push(span("c-muted", rate));
+      rightLen += 3 + rate.length;
+    }
+    const rightHtml = `${rPartsHtml.join(sep)} `;
+    const gap = Math.max(1, inner - leftLen - rightLen);
+    const footerLine = ` ${leftHtml}${" ".repeat(gap)}${rightHtml}`;
+
+    const out = [];
+    if (workingHtml) out.push(`<div class="t-line">${workingHtml}</div>`);
+    out.push(`<div class="t-line">${rule}</div>`);
+    out.push(`<div class="t-line">${inputContent}</div>`);
+    out.push(`<div class="t-line">${rule}</div>`);
+    out.push(`<div class="t-line">${footerLine}</div>`);
+    return out.join("");
+  }
+
+  // -------------------------------------------------------------------------
+  // Faithful Conversation Stream (with exact Pi 3-row UserMessageComponent)
+  // -------------------------------------------------------------------------
+  function renderStreamLines(t) {
+    const lines = [];
+    if (t < 11.15) return lines;
+
+    // Faithful Pi UserMessageComponent: paddingY = 1 (3-row sharp #343439 block, normal-weight ❯)
+    lines.push({ cls: "user-pad", html: " " });
+    lines.push({
+      cls: "user-row",
+      html: ` ${span("c-white", "❯ Fix retry backoff in client.ts and run tests")}`,
+    });
+    lines.push({ cls: "user-pad", html: " " });
+    lines.push({ html: "" });
+
+    // Thinking block (streams smoothly 13.0 -> 15.0, folds cleanly on Ctrl+T at 15.4)
+    if (t >= 12.85) {
+      const folded = t >= 15.4;
+      if (folded) {
+        lines.push({
+          html: ` ${span("c-thinking italic", "∴ Thinking…")} ${span("c-dim", "(ctrl+t to expand)")}`,
+        });
+        lines.push({ html: "" });
+      } else {
+        lines.push({ html: ` ${span("c-thinking italic", "∴ Thinking…")}` });
+        const think1 = "Checking exponential delay cap in src/backoff.ts and client retry loop.";
+        const think2 = "Will add a 5000ms ceiling and 25% jitter, then verify with unit tests.";
+        const p1 = Math.floor(invLerp(13.0, 14.0, t) * think1.length);
+        const p2 = Math.floor(invLerp(14.05, 14.95, t) * think2.length);
+        if (p1 > 0) lines.push({ html: ` ${span("c-thinking italic", think1.slice(0, p1))}` });
+        if (p2 > 0) lines.push({ html: ` ${span("c-thinking italic", think2.slice(0, p2))}` });
+        lines.push({ html: "" });
+      }
+    }
+
+    // Tool 1: Read 2 files (15.85 running -> 16.55 completed)
+    if (t >= 15.85) {
+      const done = t >= 16.55;
+      const dot = span(done ? "c-green" : "c-terra", "●");
+      const verb = done ? "Read 2 files" : "Reading 2 files";
+      const hint = done ? span("c-dim", " (ctrl+o to expand)") : "";
+      lines.push({ html: ` ${dot} ${span("c-white bold", verb)}${hint}` });
+      lines.push({
+        html: ` ${span("c-dim", "  ⎿  ")}${span("c-dim", "src/")}${span("c-text", "client.ts")}${span("c-dim", done ? " · 148 lines" : " · reading…")}`,
+      });
+      lines.push({
+        html: ` ${span("c-dim", "     ")}${span("c-dim", "src/")}${span("c-text", "backoff.ts")}${span("c-dim", done ? " · 64 lines" : " · reading…")}`,
+      });
+      lines.push({ html: "" });
+    }
+
+    // Tool 2: Update(src/backoff.ts) with full-width crisp red/green Diff
+    if (t >= 16.95) {
+      const done = t >= 17.45;
+      const dot = span(done ? "c-green" : "c-terra", "●");
+      lines.push({
+        html: ` ${dot} ${span("c-white bold", "Update")}${span("c-dim", "(")}${span("c-text", "src/backoff.ts")}${span("c-dim", ")")}`,
+      });
+      if (!done) {
+        lines.push({ html: ` ${span("c-dim", "  ⎿  Updating…")}` });
+      } else {
+        lines.push({
+          html: ` ${span("c-dim", "  ⎿  ")}${span("c-muted", "Added ")}${span("c-text bold", "3")}${span("c-muted", " lines, removed ")}${span("c-text bold", "1")}${span("c-muted", " line")}`,
+        });
+        const diffRows = [
+          {
+            cls: "diff-ctx",
+            html: `     ${span("c-dim", "24")}    ${span("c-syn-kw", "export function")} ${span("c-syn-fn", "retryDelay")}${span("c-syn-punc", "(")}${span("c-syn-var", "attempt")}${span("c-syn-punc", ":")} ${span("c-syn-type", "number")}${span("c-syn-punc", "):")} ${span("c-syn-type", "number")} ${span("c-syn-punc", "{")}`,
+          },
+          {
+            cls: "diff-rem",
+            html: `     ${span("c-dim", "25")} ${span("c-red", "-")}  <span class="dim-text">  ${span("c-syn-kw", "return")} ${span("c-syn-num", "200")} ${span("c-syn-op", "*")} ${span("c-syn-type", "Math")}${span("c-syn-punc", ".")}${span("c-syn-fn", "pow")}${span("c-syn-punc", "(")}${span("c-syn-num", "2")}${span("c-syn-punc", ",")} ${span("c-syn-var", "attempt")}${span("c-syn-punc", ");")}</span>`,
+          },
+          {
+            cls: "diff-add",
+            html: `     ${span("c-dim", "25")} ${span("c-green", "+")}    ${span("c-syn-kw", "const")} ${span("c-syn-var", "base")} ${span("c-syn-op", "=")} ${span("c-syn-type", "Math")}${span("c-syn-punc", ".")}${span("c-syn-fn", "min")}${span("c-syn-punc", "(")}${span("c-syn-num", "5000")}${span("c-syn-punc", ",")} ${span("c-syn-num", "200")} ${span("c-syn-op", "*")} ${span("c-syn-num", "2")} ${span("c-syn-op", "**")} ${span("c-syn-var", "attempt")}${span("c-syn-punc", ");")}`,
+          },
+          {
+            cls: "diff-add",
+            html: `     ${span("c-dim", "26")} ${span("c-green", "+")}    ${span("c-syn-kw", "const")} ${span("c-syn-var", "jitter")} ${span("c-syn-op", "=")} ${span("c-syn-type", "Math")}${span("c-syn-punc", ".")}${span("c-syn-fn", "round")}${span("c-syn-punc", "(")}${span("c-syn-fn", "rand")}${span("c-syn-punc", "()")} ${span("c-syn-op", "*")} ${span("c-syn-var", "base")} ${span("c-syn-op", "*")} ${span("c-syn-num", "0.25")}${span("c-syn-punc", ");")}`,
+          },
+          {
+            cls: "diff-add",
+            html: `     ${span("c-dim", "27")} ${span("c-green", "+")}    ${span("c-syn-kw", "return")} ${span("c-syn-var", "base")} ${span("c-syn-op", "+")} ${span("c-syn-var", "jitter")}${span("c-syn-punc", ";")}`,
+          },
+          {
+            cls: "diff-ctx",
+            html: `     ${span("c-dim", "28")}    ${span("c-syn-punc", "}")}`,
+          },
+        ];
+        const visibleCount = Math.min(diffRows.length, Math.floor((t - 17.45) / 0.05) + 1);
+        for (let i = 0; i < visibleCount; i++) lines.push(diffRows[i]);
+      }
+      lines.push({ html: "" });
+    }
+
+    // Tool 3: Bash(pnpm test backoff) (19.65 running -> 20.35 completed)
+    if (t >= 19.65) {
+      const done = t >= 20.35;
+      const dot = span(done ? "c-green" : "c-terra", "●");
+      lines.push({
+        html: ` ${dot} ${span("c-white bold", "Bash")}${span("c-dim", "(")}${span("c-text", "pnpm test backoff")}${span("c-dim", ")")}`,
+      });
+      if (!done) {
+        lines.push({ html: ` ${span("c-dim", "  ⎿  Running…")}` });
+      } else {
+        lines.push({ html: ` ${span("c-dim", "  ⎿  ")}${span("c-muted", "✓ src/backoff.test.ts (6 tests) 42ms")}` });
+        lines.push({ html: ` ${span("c-dim", "     ")}${span("c-muted", "Test Files  1 passed (1)")}` });
+      }
+      lines.push({ html: "" });
+    }
+
+    // Assistant final answer (20.85)
+    if (t >= 20.85) {
+      const reply = "Added capped backoff with jitter in src/backoff.ts — all 6 tests pass.";
+      const n = Math.floor(invLerp(20.85, 21.85, t) * reply.length);
+      lines.push({
+        html: ` ${span("c-white", "●")} ${span("c-text", reply.slice(0, n))}`,
+      });
+    }
+
+    return lines;
+  }
+
+  // -------------------------------------------------------------------------
+  // Captions & Keystroke HUD
+  // -------------------------------------------------------------------------
+  const CAPTIONS = [
+    {
+      start: 2.35, end: 5.95,
+      tag: "~/claude-code-ui",
+      dot: "#de7f5d",
+      en: 'Claude Code 2.x,<br><span class="accent">inside Pi.</span>',
+      zh: "深色半透明配色与陶土色双栏欢迎卡片，<br>开箱即用的 Claude Code 2.x 终端体验。",
+    },
+    {
+      start: 6.05, end: 12.95,
+      tag: "live status & thinking",
+      dot: "#b8a6e8",
+      en: 'Shimmering work,<br><span class="accent-purple">live thinking</span> & rate.',
+      zh: "Shift+Tab 实时切换思考等级联动底栏，<br>输入框上方呈现陶土色流光动词与速率。",
+    },
+    {
+      start: 13.05, end: 22.45,
+      tag: "tool stream & diff",
+      dot: "#62d67c",
+      en: 'Foldable thinking,<br><span class="accent">crisp tool diffs.</span>',
+      zh: "∴ Thinking… 一键折叠，<br>⎿ 分支工具流与红绿 Diff 清晰呈现。",
+    },
+    {
+      start: 22.55, end: 28.45,
+      tag: "instant bash mode",
+      dot: "#ea8ab8",
+      en: 'Press <span class="accent-pink">!</span> for<br><span class="accent-pink">instant Bash.</span>',
+      zh: "敲下 !，双细线边框、提示符与底栏<br>即时切换为高辨识度粉红 Bash 态。",
+    },
+    {
+      start: 28.55, end: 33.45,
+      tag: "responsive layout",
+      dot: "#de7f5d",
+      en: 'Adapts cleanly<br>to <span class="accent">narrow panes.</span>',
+      zh: "窗口窄于 78 列自动收拢为居中单栏，<br>底栏同步精简，分屏同样从容。",
+    },
+  ];
+
+  const KEY_EVENTS = [
+    { start: 6.75, end: 7.55, label: "⇧ Shift + Tab", x: 980, y: 880, pink: false },
+    { start: 7.85, end: 8.55, label: "⇧ Shift + Tab", x: 980, y: 880, pink: false },
+    { start: 10.75, end: 11.45, label: "↵ Return", x: 1520, y: 745, pink: false },
+    { start: 15.05, end: 15.85, label: "⌃ Ctrl + T", x: 1360, y: 440, pink: false },
+    { start: 23.35, end: 24.35, label: "!", x: 910, y: 735, pink: true },
+    { start: 27.15, end: 27.95, label: "Esc", x: 930, y: 735, pink: false },
+  ];
+
+  // DOM refs
+  const bgLayer = document.getElementById("bg-layer");
+  const glowBash = document.getElementById("glow-bash");
+  const cameraRig = document.getElementById("camera-rig");
+  const termShell = document.getElementById("term-shell");
+  const termScrollInner = document.getElementById("term-scroll-inner");
+  const termBottomDock = document.getElementById("term-bottom-dock");
+  const termColsBadge = document.getElementById("term-cols-badge");
+  const resizeHandleRing = document.getElementById("resize-handle-ring");
+  const widthPill = document.getElementById("width-pill");
+  const dragCursor = document.getElementById("drag-cursor");
+  const leftScrim = document.getElementById("left-scrim");
+  const captionBox = document.getElementById("caption-box");
+  const capDot = document.getElementById("cap-dot");
+  const capTagText = document.getElementById("cap-tag-text");
+  const capEn = document.getElementById("cap-en");
+  const capZh = document.getElementById("cap-zh");
+  const keyHud = document.getElementById("key-hud");
+  const introHero = document.getElementById("intro-hero");
+  const introBadge = document.getElementById("intro-badge");
+  const introSub = document.getElementById("intro-sub");
+  const outroLayer = document.getElementById("outro-layer");
+  const progressBar = document.getElementById("progress-bar");
+
+  // -------------------------------------------------------------------------
+  // Main Deterministic 60fps Render Function: renderAt(t) for t in [0, 38.0]
+  // -------------------------------------------------------------------------
+  window.renderAt = function renderAt(t) {
+    progressBar.style.width = `${clamp(t / 38.0) * 100}%`;
+
+    // 1. Stars twinkle
+    for (let i = 0; i < stars.length; i++) {
+      const s = stars[i];
+      const twinkle = 0.5 + 0.5 * Math.sin(t * s.speed * 2.2 + s.phase);
+      s.el.style.opacity = (s.baseAlpha * (0.4 + 0.8 * twinkle)).toFixed(3);
+    }
+
+    // 2. Intro Hero (0.0 -> 2.85s)
+    if (t < 2.85) {
+      const enter = easeOutBack(invLerp(0.05, 0.75, t));
+      const bounce = Math.sin(clamp((t - 0.75) / 1.0) * Math.PI) * -10 * (t > 0.75 && t < 1.75 ? 1 : 0);
+      const exitP = easeInOutCubic(invLerp(1.85, 2.65, t));
+      introHero.style.opacity = (1 - exitP).toFixed(3);
+      introBadge.style.transform = `translate3d(${lerp(0, 290, exitP).toFixed(1)}px, ${lerp(bounce, -130, exitP).toFixed(1)}px, 0) scale(${lerp(0.84 + 0.16 * enter, 0.52, exitP).toFixed(3)})`;
+      const subEnter = easeOutCubic(invLerp(0.28, 0.95, t));
+      const subExit = 1 - easeInOutCubic(invLerp(1.75, 2.35, t));
+      introSub.style.opacity = (subEnter * subExit).toFixed(3);
+      introSub.style.transform = `translate3d(0, ${(1 - subEnter) * 24 - (1 - subExit) * 16}px, 0)`;
+    } else {
+      introHero.style.opacity = "0";
+    }
+
+    // 3. Buttery-smooth 60fps Responsive Window Width (Scene 5: 28.5s -> 33.5s)
+    const widthNorm = keyframeValue(t, [
+      { t: 0, v: 1 },
+      { t: 29.2, v: 1 },
+      { t: 30.8, v: 0, ease: easeInOutCubic },
+      { t: 32.15, v: 0 },
+      { t: 33.25, v: 1, ease: easeOutExpo },
+      { t: 38.0, v: 1 },
+    ]);
+    const termW = Math.round(lerp(668, 980, widthNorm));
+    const cols = Math.round(lerp(62, 94, widthNorm));
+    termShell.style.width = `${termW}px`;
+    termColsBadge.textContent = `${cols}×28`;
+
+    const resizeVis = smoothstep(28.8, 29.2, t) * (1 - smoothstep(33.15, 33.5, t));
+    resizeHandleRing.style.opacity = resizeVis.toFixed(3);
+    widthPill.style.opacity = resizeVis.toFixed(3);
+    widthPill.textContent = cols < 78 ? `${cols} cols · single-column` : `${cols} cols · two-column`;
+
+    // 4. Faithful Pi State (low -> medium -> high, live ≈ t/s cleared on settle, !git status -sb)
+    let thinking = "low";
+    if (t >= 7.05) thinking = "medium";
+    if (t >= 8.15) thinking = "high";
+
+    const promptText = "Fix retry backoff in client.ts and run tests";
+    const bashCmd = "!git status -sb";
+    const bashMode = t >= 23.65 && t < 27.45;
+    let draft = "";
+    if (t >= 8.95 && t < 11.15) {
+      const count = Math.floor(invLerp(8.95, 10.65, t) * promptText.length);
+      draft = promptText.slice(0, count);
+    } else if (bashMode) {
+      if (t < 24.45) {
+        draft = "!";
+      } else {
+        const count = 1 + Math.floor(invLerp(24.45, 25.95, t) * (bashCmd.length - 1));
+        draft = bashCmd.slice(0, count);
+      }
+    }
+
+    const workingActive = t >= 11.2 && t < 20.85;
+    const workElapsed = Math.max(0.2, t - 11.2);
+    const workVerb = t < 15.6 ? "Clauding…" : "Synthesizing…";
+    const workTokens = t < 11.5 ? 0 : Math.min(2840, (t - 11.4) * 315);
+    // Faithful live rate: '≈ N t/s' only while Working is active; cleared cleanly when settled!
+    const liveRate = workingActive
+      ? `≈${Math.round(128 + 16 * Math.sin(t * 3.1))} t/s`
+      : undefined;
+    const contextLeft = t < 13.0 ? 94 : t < 17.5 ? 90 : 86;
+
+    // 5. Render Terminal Content with silky 60fps scroll
+    const headerLines = renderWelcomeHeader(cols, "claude-opus-4-6", thinking, "main");
+    const streamLines = t < 28.45 ? renderStreamLines(t) : [];
+    const htmlParts = [];
+    for (const hl of headerLines) {
+      htmlParts.push(`<div class="t-line">${hl}</div>`);
+    }
+    for (const sl of streamLines) {
+      htmlParts.push(`<div class="t-line ${sl.cls || ""}">${sl.html}</div>`);
+    }
+    termScrollInner.innerHTML = htmlParts.join("");
+
+    const scrollY = keyframeValue(t, [
+      { t: 0, v: 0 },
+      { t: 12.6, v: 0 },
+      { t: 13.5, v: -135, ease: easeOutCubic },
+      { t: 16.0, v: -215, ease: easeOutCubic },
+      { t: 17.5, v: -315, ease: easeOutCubic },
+      { t: 20.0, v: -385, ease: easeOutCubic },
+      { t: 22.4, v: -385 },
+      { t: 28.45, v: -385 },
+      { t: 28.65, v: 0, ease: easeOutExpo },
+      { t: 38.0, v: 0 },
+    ]);
+    termScrollInner.style.transform = `translate3d(0, ${scrollY.toFixed(1)}px, 0)`;
+
+    const showCursor = !workingActive && (Math.floor(t * 2.2) % 2 === 0 || (t >= 8.95 && t < 10.7) || (t >= 24.45 && t < 26.0));
+    const workingHtml = renderWorkingLine(workElapsed, workTokens, workVerb, workingActive);
+    termBottomDock.innerHTML = renderEditorAndFooter({
+      cols,
+      draft,
+      bashMode,
+      thinking,
+      modelId: "claude-opus-4-6",
+      branch: "main",
+      contextLeft,
+      rate: liveRate,
+      showCursor,
+      workingHtml,
+    });
+
+    // 6. Terminal Reveal, Exit & Pink Bash Glow
+    const termEnter = easeOutExpo(invLerp(2.15, 3.05, t));
+    const termExit = 1 - easeInOutCubic(invLerp(33.4, 34.35, t));
+    termShell.style.opacity = (termEnter * termExit).toFixed(3);
+
+    const bashGlowAmt = smoothstep(23.55, 24.0, t) * (1 - smoothstep(27.3, 27.8, t));
+    glowBash.style.opacity = (bashGlowAmt * 0.85).toFixed(3);
+    if (bashGlowAmt > 0.01) {
+      termShell.style.borderColor = `rgba(234, 138, 184, ${(0.13 + 0.45 * bashGlowAmt).toFixed(3)})`;
+      termShell.style.boxShadow = `0 36px 90px rgba(0,0,0,0.72), 0 0 ${Math.round(50 * bashGlowAmt)}px rgba(234,138,184,${(0.28 * bashGlowAmt).toFixed(3)}), inset 0 1px 0 rgba(255,255,255,0.12)`;
+    } else {
+      termShell.style.borderColor = "rgba(255, 255, 255, 0.13)";
+      termShell.style.boxShadow = "0 36px 90px rgba(0, 0, 0, 0.72), 0 12px 28px rgba(0, 0, 0, 0.50), 0 0 0 1px rgba(222, 127, 93, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.11)";
+    }
+
+    // 7. Crisp 2D Virtual Camera Rig (zero 3D rotate blur + silky 2.5D background parallax)
+    const camScale = keyframeValue(t, [
+      { t: 0.0, v: 0.90 },
+      { t: 2.15, v: 0.90 },
+      { t: 3.15, v: 1.06, ease: easeOutExpo },     // Scene 1: full welcome card reveal
+      { t: 5.9, v: 1.08, ease: easeInOutCubic },
+      { t: 6.65, v: 1.24, ease: easeOutExpo },     // Scene 2: push-in to footer + input
+      { t: 10.9, v: 1.24 },
+      { t: 11.7, v: 1.26, ease: easeOutCubic },    // Scene 2b: lock on shimmering Working + ≈ rate
+      { t: 12.9, v: 1.26 },
+      { t: 13.7, v: 1.22, ease: easeInOutCubic },  // Scene 3: tilt up to 3-row User + Thinking + Read
+      { t: 17.3, v: 1.22 },
+      { t: 18.1, v: 1.32, ease: easeOutExpo },     // Scene 3b: push-in to crisp red/green Diff
+      { t: 19.7, v: 1.32 },
+      { t: 20.5, v: 1.20, ease: easeInOutCubic },  // Scene 3c: Bash pass + reply
+      { t: 22.4, v: 1.20 },
+      { t: 23.2, v: 1.26, ease: easeOutExpo },     // Scene 4: push-in to pink Bash input + footer
+      { t: 28.4, v: 1.26 },
+      { t: 29.15, v: 1.06, ease: easeOutExpo },    // Scene 5: pull-back for silky responsive resize
+      { t: 33.4, v: 1.06 },
+      { t: 34.4, v: 0.86, ease: easeInOutCubic },  // Scene 6: recede for outro
+      { t: 38.0, v: 0.86 },
+    ]);
+
+    const camTx = keyframeValue(t, [
+      { t: 0.0, v: 40 },
+      { t: 3.15, v: 15, ease: easeOutExpo },
+      { t: 5.9, v: 15 },
+      { t: 6.65, v: 20, ease: easeOutExpo },
+      { t: 10.9, v: 15, ease: easeInOutCubic },
+      { t: 11.7, v: 10, ease: easeOutCubic },
+      { t: 12.9, v: 10 },
+      { t: 13.7, v: 25, ease: easeInOutCubic },
+      { t: 17.3, v: 25 },
+      { t: 18.1, v: 30, ease: easeOutExpo },
+      { t: 19.7, v: 25 },
+      { t: 20.5, v: 20, ease: easeInOutCubic },
+      { t: 22.4, v: 20 },
+      { t: 23.2, v: 22, ease: easeOutExpo },
+      { t: 28.4, v: 22 },
+      { t: 29.15, v: 20, ease: easeOutExpo },
+      { t: 30.8, v: 155, ease: easeInOutCubic },
+      { t: 32.15, v: 155 },
+      { t: 33.25, v: 15, ease: easeOutExpo },
+      { t: 38.0, v: 15 },
+    ]);
+
+    const camTy = keyframeValue(t, [
+      { t: 0.0, v: 40 },
+      { t: 3.15, v: 0, ease: easeOutExpo },
+      { t: 5.9, v: 0 },
+      { t: 6.65, v: -205, ease: easeOutExpo },
+      { t: 11.7, v: -190, ease: easeOutCubic },
+      { t: 12.9, v: -190 },
+      { t: 13.7, v: 50, ease: easeInOutCubic },
+      { t: 17.3, v: 45 },
+      { t: 18.1, v: 20, ease: easeOutExpo },
+      { t: 19.7, v: 15 },
+      { t: 20.5, v: -20, ease: easeInOutCubic },
+      { t: 22.4, v: -20 },
+      { t: 23.2, v: -205, ease: easeOutExpo },
+      { t: 28.4, v: -205 },
+      { t: 29.15, v: 15, ease: easeOutExpo },
+      { t: 33.4, v: 15 },
+      { t: 34.4, v: 55, ease: easeInOutCubic },
+      { t: 38.0, v: 55 },
+    ]);
+
+    const floatY = Math.sin(t * 1.15) * 3.5;
+    const ax = 1230, ay = 540;
+    cameraRig.style.transform =
+      `translate3d(${ax}px, ${ay}px, 0) ` +
+      `scale(${camScale.toFixed(4)}) ` +
+      `translate3d(${(-ax + camTx).toFixed(2)}px, ${(-ay + camTy + floatY).toFixed(2)}px, 0)`;
+
+    bgLayer.style.transform = `translate3d(${(camTx * 0.16).toFixed(1)}px, ${(camTy * 0.14).toFixed(1)}px, 0) scale(${(1 + (camScale - 1) * 0.12).toFixed(4)})`;
+
+    if (resizeVis > 0.01) {
+      const edgeScreenX = ax + (740 + termW - ax + camTx) * camScale;
+      const edgeScreenY = ay + (175 + 240 - ay + camTy + floatY) * camScale;
+      dragCursor.style.opacity = resizeVis.toFixed(3);
+      dragCursor.style.left = `${(edgeScreenX - 18).toFixed(1)}px`;
+      dragCursor.style.top = `${(edgeScreenY - 18).toFixed(1)}px`;
+    } else {
+      dragCursor.style.opacity = "0";
+    }
+
+    // 8. Left Scrim + Kinetic Captions
+    leftScrim.style.opacity = (smoothstep(2.3, 2.85, t) * (1 - smoothstep(33.2, 33.8, t))).toFixed(3);
+    let activeCap = null;
+    for (const c of CAPTIONS) {
+      if (t >= c.start && t <= c.end) { activeCap = c; break; }
+    }
+    if (activeCap) {
+      const enter = easeOutExpo(invLerp(activeCap.start, activeCap.start + 0.55, t));
+      const exit = 1 - easeInOutCubic(invLerp(activeCap.end - 0.35, activeCap.end, t));
+      const dy = (1 - enter) * 28 - (1 - exit) * 18;
+      captionBox.style.opacity = (enter * exit).toFixed(3);
+      captionBox.style.transform = `translate3d(0, calc(-50% + ${dy.toFixed(1)}px), 0)`;
+      capDot.style.background = activeCap.dot;
+      capDot.style.boxShadow = `0 0 12px ${activeCap.dot}`;
+      capTagText.textContent = activeCap.tag;
+      capEn.innerHTML = activeCap.en;
+      capZh.innerHTML = activeCap.zh;
+    } else {
+      captionBox.style.opacity = "0";
+    }
+
+    // 9. Keystroke HUD
+    let activeKey = null;
+    for (const k of KEY_EVENTS) {
+      if (t >= k.start && t <= k.end) { activeKey = k; break; }
+    }
+    if (activeKey) {
+      const enter = easeOutBack(invLerp(activeKey.start, activeKey.start + 0.22, t));
+      const exit = 1 - easeInOutCubic(invLerp(activeKey.end - 0.22, activeKey.end, t));
+      const sc = lerp(0.75, 1.0, enter) * lerp(0.92, 1.0, exit);
+      keyHud.textContent = activeKey.label;
+      keyHud.className = activeKey.pink ? "pink-key" : "";
+      keyHud.style.left = `${activeKey.x}px`;
+      keyHud.style.top = `${activeKey.y}px`;
+      keyHud.style.opacity = clamp(enter * exit).toFixed(3);
+      keyHud.style.transform = `translate(-50%, -50%) scale(${sc.toFixed(3)})`;
+    } else {
+      keyHud.style.opacity = "0";
+    }
+
+    // 10. Outro Card
+    if (t >= 33.75) {
+      const enter = easeOutExpo(invLerp(33.85, 34.75, t));
+      const fadeEnd = 1 - smoothstep(37.45, 38.0, t) * 0.08;
+      outroLayer.style.opacity = (enter * fadeEnd).toFixed(3);
+      outroLayer.style.transform = `translate3d(0, ${((1 - enter) * 32).toFixed(1)}px, 0) scale(${(0.94 + 0.06 * enter).toFixed(4)})`;
+    } else {
+      outroLayer.style.opacity = "0";
+    }
+  };
+
+  window.renderAt(3.5);
+})();
+</script>
+</body>
+</html>
